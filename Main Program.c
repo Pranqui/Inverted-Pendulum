@@ -28,45 +28,19 @@ Compile by: `gcc -Wall -o pwm_cap pwm_cap.c -lpruio`
 
 //! The pin for PWM output.
 #define P_OUT P9_14
-#define P P9_13
+#define P P9_12
 
 //! The pin for CAP input.
 #define P_IN P9_28
 
-/*! \brief Wait for keystroke or timeout.
-\param mseconds Timeout value in milliseconds.
-\returns 0 if timeout, 1 if input available, -1 on error.
-
-Wait for a keystroke or timeout and return which of the events happened.
-
-*/
-int
-isleep(unsigned int mseconds)
-{
-  fd_set set;
-  struct timeval timeout;
-
-  /* Initialize the file descriptor set. */
-  FD_ZERO(&set);
-  FD_SET(STDIN_FILENO, &set);
-
-  /* Initialize the timeout data structure. */
-  timeout.tv_sec = 0;
-  timeout.tv_usec = mseconds * 1000;
-
-  return TEMP_FAILURE_RETRY(select(FD_SETSIZE,
-                                   &set, NULL, NULL,
-                                   &timeout));
-}
-
 //! The main function.
 int main(int argc, char **argv)
 {
-  pruIo *Io = pruio_new(PRUIO_DEF_ACTIVE, 0x98, 0, 1); //! ouvrir l'interruption Pruss (/ dev / uio5),charger les instructions de pasm_init.p au PRU et les exécute, et appeler les fonctions initialize des UDT du sous-système.
+  pruIo *Io = pruio_new(PRUIO_DEF_ACTIVE, 0, 0, 0); //! ouvrir l'interruption Pruss (/ dev / uio5),charger les instructions de pasm_init.p au PRU et les exécute, et appeler les fonctions initialize des UDT du sous-système.
   do {
     if (Io->Errr) {
                printf("initialisation failed (%s)\n", Io->Errr); break;}
-if (pruio_gpio_setValue(Io, P, 1)) {printf("setValue P1 error (%s)\n", Io->Errr); break;}
+if ( pruio_gpio_setValue(Io, P, 0x8F)) {printf("setValue P error (%s)\n", Io->Errr); break;}
     if (pruio_cap_config(Io, P_IN, 2.)) { //         Cette fonction configure un axe d'en-tête pour la capture et Analyse Pulse (CAP) trains. La configuration des broches est vérifié. Si elle est pas configuré comme entrée pour le module de la Cap dans le sous-système PWM, libpruio essaie d'adapter le muxing broches.
           printf("failed setting input @P_IN (%s)\n", Io->Errr); break;}
 
@@ -92,13 +66,6 @@ if (pruio_gpio_setValue(Io, P, 1)) {printf("setValue P1 error (%s)\n", Io->Errr)
     tcsetattr( STDIN_FILENO, TCSANOW, &newt );
 
     while(1) { //                                       run endless loop
-      if (1 == isleep(1)) {
-        
-        if (pruio_pwm_setValue(Io, P_OUT, f0, d0)) { //   set new output
-           printf("failed setting PWM output (%s)\n", Io->Errr); break;}
-
-        printf("\n--> Frequency: %10f , Duty: %10f\n", f0, d0); //  info
-      }
 
       if (pruio_cap_Value(Io, P_IN, &f1, &d1)) { //    get current input
           printf("failed reading input @P_IN (%s)\n", Io->Errr); break;}
