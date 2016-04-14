@@ -66,13 +66,13 @@ if (pruio_gpio_setValue(Io, P, 0x8F)) {printf("setValue P1 error (%s)\n", Io->Er
     tcsetattr( STDIN_FILENO, TCSANOW, &newt );
 
     while(1) { //                                       run endless loop
-      if (1 == isleep(1)) {
+
         
         if (pruio_pwm_setValue(Io, P_OUT, f0, d0)) { //   set new output
            printf("failed setting PWM output (%s)\n", Io->Errr); break;}
 
         printf("\n--> Frequency: %10f , Duty: %10f\n", f0, d0); //  info
-      }
+   
 
       if (pruio_cap_Value(Io, P_IN, &f1, &d1)) { //    get current input
           printf("failed reading input @P_IN (%s)\n", Io->Errr); break;}
